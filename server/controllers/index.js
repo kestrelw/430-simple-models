@@ -3,7 +3,7 @@ const models = require('../models');
 
 // get the Cat model
 const { Cat } = models;
-// const { Dog } = models;
+const { Dog } = models;
 
 // Function to handle rendering the index page.
 const hostIndex = async (req, res) => {
@@ -279,6 +279,106 @@ const searchName = async (req, res) => {
   return res.json({ name: doc.name, beds: doc.bedsOwned });
 };
 
+
+const getDogName = async (req, res) => {
+  try {
+    /* Here we are trying to do the exact same thing we did in host index up
+       above. We want to find the most recently added cat. The only difference
+       here is that we are using the query .sort() function rather than passing
+       the sort in as a part of the 3rd parameter options object. Both work
+       functionally the same. We are just seeing that it can be written in
+       more than one way.
+    */
+    const doc = await Dog.findOne({}).sort({ createdDate: 'descending' }).lean().exec();
+
+    // If we did get a cat back, store it's name in the name variable.
+    if (doc) {
+      return res.json({ name: doc.name });
+    }
+    return res.status(404).json({ error: 'No dog found' });
+  } catch (err) {
+    /* If an error occurs, it means something went wrong with the database. We will
+       give the user a 500 internal server error status code and an error message.
+    */
+    console.log(err);
+    return res.status(500).json({ error: 'Something went wrong contacting the database' });
+  }
+};
+
+const setDogName = async (req, res) => {
+  /* If we look at views/page2.handlebars, the form has inputs for a firstname, lastname
+     and a number of beds. When this POST request is sent to us, the bodyParser plugin
+     we configured in app.js will store that information in req.body for us.
+  */
+  console.log(req.body);
+  console.log("fullname: "+req.body.fullname);
+  console.log("breed: "+req.body.breed);
+  console.log("age: "+req.body.age);
+
+  if (!req.body.fullname || !req.body.breed || !req.body.age) {
+    // If they are missing data, send back an error.
+    return res.status(400).json({ error: 'fullname, breed and age are all required' });
+  }
+
+  const dogData = {
+    name: req.body.fullname,
+    breed: req.body.breed,
+    age: req.body.age,
+  };
+
+  //THIS IS SO MESSED UP WHYS IT AUTO FORMAT TO CAT============================================================
+
+  /* Once we have our cat object set up. We want to turn it into something the database
+     can understand. To do this, we create a new instance of a Cat using the Cat model
+     exported from the Models folder.
+
+     Note that this does NOT store the cat in the database. That is the next step.
+  */
+  const newDog = new Dog(dogData);
+
+  console.log("dogData: "+dogData);
+  console.log("newDog: "+newDog);
+  console.log("name: "+newDog.name);
+  console.log("breed: "+newDog.breed);
+  console.log("age: "+newDog.age);
+
+  try {
+
+    await newDog.save();
+    return res.status(201).json({
+      name: newDog.name,
+      breed: newDog.breed,
+      age: newDog.age
+    });
+  } catch (err) {
+
+    console.log(err);
+    return res.status(500).json({ error: 'failed to create dog' });
+  }
+};
+
+const searchDogName = async (req, res) => {
+  if (!req.query.name) {
+    return res.status(400).json({ error: 'Name is required to perform a search' });
+  }
+  let doc;
+  try {
+    doc = await Dog.findOneAndUpdate({ name: req.query.name }, {$inc: {'age': 1}}).exec();
+  } catch (err) {
+    // If there is an error, log it and send the user an error message.
+    console.log(err);
+    return res.status(500).json({ error: 'Something went wrong' });
+  }
+
+  // If we do not find something that matches our search, doc will be empty.
+  if (!doc) {
+    return res.status(404).json({ error: 'No dogs found' });
+  }
+
+  // Otherwise, we got a result and will send it back to the user.
+  return res.json({ name: doc.name, beds: doc.breed, age: doc.age });
+};
+
 /* A function for updating the last cat added to the database.
    Usually database updates would be a more involved process, involving finding
    the right element in the database based on query, modifying it, and updating
@@ -338,10 +438,11 @@ module.exports = {
   page3: hostPage3,
   page4: hostPage4,
   getName,
+  getDogName,
   setName,
+  setDogName,
   updateLast,
   searchName,
+  searchDogName,
   notFound,
 };
-
-//heroku let me push
