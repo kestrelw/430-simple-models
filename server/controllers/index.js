@@ -279,7 +279,6 @@ const searchName = async (req, res) => {
   return res.json({ name: doc.name, beds: doc.bedsOwned });
 };
 
-
 const getDogName = async (req, res) => {
   try {
     /* Here we are trying to do the exact same thing we did in host index up
@@ -311,9 +310,9 @@ const setDogName = async (req, res) => {
      we configured in app.js will store that information in req.body for us.
   */
   console.log(req.body);
-  console.log("fullname: "+req.body.fullname);
-  console.log("breed: "+req.body.breed);
-  console.log("age: "+req.body.age);
+  console.log(`fullname: ${req.body.fullname}`);
+  console.log(`breed: ${req.body.breed}`);
+  console.log(`age: ${req.body.age}`);
 
   if (!req.body.fullname || !req.body.breed || !req.body.age) {
     // If they are missing data, send back an error.
@@ -326,8 +325,6 @@ const setDogName = async (req, res) => {
     age: req.body.age,
   };
 
-  //THIS IS SO MESSED UP WHYS IT AUTO FORMAT TO CAT============================================================
-
   /* Once we have our cat object set up. We want to turn it into something the database
      can understand. To do this, we create a new instance of a Cat using the Cat model
      exported from the Models folder.
@@ -336,22 +333,20 @@ const setDogName = async (req, res) => {
   */
   const newDog = new Dog(dogData);
 
-  console.log("dogData: "+dogData);
-  console.log("newDog: "+newDog);
-  console.log("name: "+newDog.name);
-  console.log("breed: "+newDog.breed);
-  console.log("age: "+newDog.age);
+  console.log(`dogData: ${dogData}`);
+  console.log(`newDog: ${newDog}`);
+  console.log(`name: ${newDog.name}`);
+  console.log(`breed: ${newDog.breed}`);
+  console.log(`age: ${newDog.age}`);
 
   try {
-
     await newDog.save();
     return res.status(201).json({
       name: newDog.name,
       breed: newDog.breed,
-      age: newDog.age
+      age: newDog.age,
     });
   } catch (err) {
-
     console.log(err);
     return res.status(500).json({ error: 'failed to create dog' });
   }
@@ -363,7 +358,7 @@ const searchDogName = async (req, res) => {
   }
   let doc;
   try {
-    doc = await Dog.findOneAndUpdate({ name: req.query.name }, {$inc: {'age': 1}}).exec();
+    doc = await Dog.findOneAndUpdate({ name: req.query.name }, { $inc: { age: 1 } }).exec();
   } catch (err) {
     // If there is an error, log it and send the user an error message.
     console.log(err);
