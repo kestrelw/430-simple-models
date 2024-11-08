@@ -358,7 +358,7 @@ const searchDogName = async (req, res) => {
   }
   let doc;
   try {
-    doc = await Dog.findOneAndUpdate({ name: req.query.name }, { $inc: { age: 1 } }).exec();
+    doc = await Dog.findOneAndUpdate({ name: req.query.name }, { $inc: { age: 1 } }, {new: true}).exec();
   } catch (err) {
     // If there is an error, log it and send the user an error message.
     console.log(err);
